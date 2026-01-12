@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: 'mysql/mysql-server:8.0'
+    container_name: corporate_cars_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-corp_car_reserv_db}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf # опционально
+    networks:
+      - laravel_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret}"]
+      timeout: 10s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: corporate_cars_pma
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 512M
+    ports:
+      - "8081:80"
+    networks:
+      - laravel_network
+
+volumes:
+  mysql_data:
+
+networks:
+  laravel_network:
+    driver: bridge
+
