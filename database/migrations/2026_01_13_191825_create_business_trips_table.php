@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('employee_id')->constrained('users');
             $table->foreignId('car_id')->constrained();
-            $table->dateTime('start_time');
-            $table->dateTime('end_time');
+            $table->dateTime('start_time')->nullable();
+            $table->dateTime('end_time')->nullable();
+            $table->string('start_address')->nullable();
+            $table->string('end_address')->nullable();
             $table->enum('status', ['planned', 'in_progress', 'completed', 'cancelled']);
             $table->timestamps();
         });
