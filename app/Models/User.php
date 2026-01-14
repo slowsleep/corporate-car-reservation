@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id',
+        'position_id'
     ];
 
     /**
@@ -44,5 +46,20 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function position()
+    {
+        return $this->belongsTo(Position::class);
+    }
+
+    public function driverCars()
+    {
+        return $this->hasMany(Car::class, 'driver_id');
+    }
+
+    public function businessTrips()
+    {
+        return $this->hasMany(BusinessTrip::class, 'employee_id');
     }
 }
