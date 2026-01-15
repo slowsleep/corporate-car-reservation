@@ -14,7 +14,7 @@ class BusinessTripSeeder extends Seeder
     public function run(): void
     {
         BusinessTrip::factory()->planned()->create();
-        BusinessTrip::factory()->inProgress()->create();
+        BusinessTrip::factory(5)->inProgress()->create();
         BusinessTrip::factory()->completed()->create();
         BusinessTrip::factory()->cancelled()->create();
         BusinessTrip::factory()->create(); // рандомная поездка
