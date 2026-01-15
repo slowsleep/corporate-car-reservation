@@ -20,14 +20,26 @@ class CarFactory extends Factory
      */
     public function definition(): array
     {
-        $driverRoleId = Role::where('name', 'driver')->first()->id;
+        $randDriverWithoutCar = User::where('role_id', Role::where('name', 'driver')->first()->id)
+            ->whereDoesntHave('car')
+            ->get()->first()->id;
 
         return [
-            'model' => fake()->title,
+            'model' => fake()->word(),
             'car_category_id' => CarCategory::inRandomOrder()->first()->id,
-            'driver_id' => User::where('role_id', $driverRoleId)->inRandomOrder()->first()->id,
-            'plate_number' => fake()->numberBetween(2, 6),
+            'driver_id' => $randDriverWithoutCar,
+            'plate_number' => $this->generatePlateNumber(),
             'year' => (int) fake()->year(),
+            'color' => fake()->colorName(),
         ];
+    }
+
+    private function generatePlateNumber(): string
+    {
+        $letters = ['А', 'В', 'Е', 'К', 'М', 'Н', 'О', 'Р', 'С', 'Т', 'У', 'Х'];
+        return $letters[array_rand($letters)] .
+                rand(100, 999) .
+                $letters[array_rand($letters)] .
+                $letters[array_rand($letters)];
     }
 }
