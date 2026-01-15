@@ -16,8 +16,9 @@ return new class extends Migration
             $table->string('model');
             $table->foreignId('car_category_id')->constrained();
             $table->foreignId('driver_id')->constrained('users');
-            $table->integer('plate_number');
+            $table->string('plate_number');
             $table->integer('year');
+            $table->string('color');
             $table->timestamps();
         });
     }
