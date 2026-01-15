@@ -24,7 +24,16 @@ class BusinessTripFactory extends Factory
     public function definition(): array
     {
         $userEmployeeRoleId = Role::where('name', 'employee')->first()->id;
-        $employee = User::where('role_id', $userEmployeeRoleId)->whereNot('position_id', 1)->inRandomOrder()->first();
+
+        $employee = User::where('role_id', $userEmployeeRoleId)
+            ->whereNot('position_id', 1)
+            ->whereDoesntHave('businessTrips', function ($query) {
+                $query->whereDate('start_time', today()) // поездки, начинающиеся сегодня
+                    ->whereIn('status', ['planned', 'in_progress']); // активные статусы
+                })
+            ->inRandomOrder()
+            ->first();
+
         $positionLevel = Position::where('id', $employee->position_id)->first()->level;
         $carCategories = PositionLevelCarCategory::where('position_level',  $positionLevel)->pluck('car_category_id')->toArray();
         $carId = Car::whereIn('car_category_id', $carCategories)->available()->inRandomOrder()->first()->id;
@@ -32,20 +41,18 @@ class BusinessTripFactory extends Factory
         $status = fake()->randomElement(['planned', 'in_progress', 'completed', 'cancelled']);
         $startTime = null;
         $endTime = null;
-        $startAddress = null;
-        $endAddress = null;
+        $startAddress = fake()->address();
+        $endAddress = fake()->address();
 
 
         if (in_array($status, ['planned', 'in_progress', 'completed'])) {
             $startTime = fake()->dateTimeBetween('-6 hours');
             $startTime = Carbon::instance($startTime);
-            $startAddress = fake()->address();
         }
 
         if (in_array($status, ['completed'])) {
             $durationInMinutes = rand(5, 90);
             $endTime = $startTime->copy()->addMinutes($durationInMinutes);
-            $endAddress = fake()->address();
         }
 
         return [
@@ -63,12 +70,11 @@ class BusinessTripFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $startTime = Carbon::now()->addHours(rand(1, 72));
-            $startAddress = fake()->address();
 
             return [
                 'status' => 'planned',
                 'start_time' => $startTime,
-                'start_address' => $startAddress,
+                'end_time' => null,
             ];
         });
     }
@@ -77,12 +83,11 @@ class BusinessTripFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $startTime = Carbon::now()->subMinutes(rand(1, 30));
-            $startAddress = fake()->address();
 
             return [
                 'status' => 'in_progress',
                 'start_time' => $startTime,
-                'start_address' => $startAddress,
+                'end_time' => null,
             ];
         });
     }
@@ -91,7 +96,7 @@ class BusinessTripFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $startTime = Carbon::now()->subHours(rand(1, 48));
-            $duration = rand(30, 300);
+            $duration = rand(5, 90);
             $startAddress = fake()->address();
             $endAddress = fake()->address();
 
@@ -112,8 +117,6 @@ class BusinessTripFactory extends Factory
                 'status' => 'cancelled',
                 'start_time' => null,
                 'end_time' => null,
-                'start_address' => null,
-                'end_address' => null,
             ];
         });
     }
