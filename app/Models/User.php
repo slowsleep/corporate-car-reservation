@@ -54,9 +54,9 @@ class User extends Authenticatable
         return $this->belongsTo(Position::class);
     }
 
-    public function driverCars()
+    public function car()
     {
-        return $this->hasMany(Car::class, 'driver_id');
+        return $this->hasOne(Car::class, 'driver_id');
     }
 
     public function businessTrips()
