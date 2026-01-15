@@ -25,15 +25,34 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $role = Role::inRandomOrder()->first();
+        $positionId = null;
+
+        if ($role->name == 'employee') {
+            $positionId = Position::inRandomOrder()->first()->id;
+        }
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role_id' => Role::inRandomOrder()->first()->id,
-            'position_id' => Position::inRandomOrder()->first()->id
+            'role_id' => $role->id,
+            'position_id' => $positionId,
         ];
+    }
+
+    public function driver(): Factory
+    {
+        return $this->state(function (array $attributes) {
+            $driverRole = Role::where('name', 'driver')->first();
+
+            return [
+                'role_id' => $driverRole->id,
+                'position_id' => null,
+            ];
+        });
     }
 
     /**
