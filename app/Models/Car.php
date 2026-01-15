@@ -40,29 +40,28 @@ class Car extends Model
         return $this->hasMany(BusinessTrip::class);
     }
 
-    public function scopeAvailable(Builder $query, ?Carbon $startTime = null, ?Carbon $endTime = null)
+    public function scopeAvailable(Builder $query, ?Carbon $startTime = null)
     {
         $startTime = $startTime ?? now();
-        $endTime = $endTime ?? now()->addHours(2);
 
-        return $query->whereNotExists(function ($subQuery) use ($startTime, $endTime) {
+        return $query->whereNotExists(function ($subQuery) use ($startTime) {
             $subQuery->select(DB::raw(1))
                 ->from('business_trips')
                 ->whereColumn('business_trips.car_id', 'cars.id')
                 ->whereIn('business_trips.status', ['planned', 'in_progress'])
-                ->where(function ($q) use ($startTime, $endTime) {
+                ->where(function ($q) use ($startTime) {
                     // Проверяем пересечение интервалов
-                    $q->where(function ($innerQ) use ($startTime, $endTime) {
+                    $q->where(function ($innerQ) use ($startTime) {
                         // Если end_time не null, проверяем стандартное пересечение
                         $innerQ->whereNotNull('business_trips.end_time')
-                            ->where('business_trips.start_time', '<', $endTime)
+                            // ->where('business_trips.start_time', '<', $endTime)
                             ->where('business_trips.end_time', '>', $startTime);
                     })
-                    ->orWhere(function ($innerQ) use ($startTime, $endTime) {
+                    ->orWhere(function ($innerQ) use ($startTime) {
                         // Если end_time null, проверяем что start_time в пределах интервала
                         // или что start_time был недавно (для in_progress)
                         $innerQ->whereNull('business_trips.end_time')
-                            ->where('business_trips.start_time', '<', $endTime)
+                            // ->where('business_trips.start_time', '<', $endTime)
                             ->where('business_trips.start_time', '>=', $startTime->copy()->subHours(24));
                             // И поездка началась не раньше чем 24 часа назад
                     });
