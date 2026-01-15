@@ -49,17 +49,24 @@ class Car extends Model
             $subQuery->select(DB::raw(1))
                 ->from('business_trips')
                 ->whereColumn('business_trips.car_id', 'cars.id')
+                ->whereIn('business_trips.status', ['planned', 'in_progress'])
                 ->where(function ($q) use ($startTime, $endTime) {
                     // Проверяем пересечение интервалов
                     $q->where(function ($innerQ) use ($startTime, $endTime) {
-                        // Поездка пересекается с запрашиваемым интервалом
-                        $innerQ->where('business_trips.start_time', '<', $endTime)
+                        // Если end_time не null, проверяем стандартное пересечение
+                        $innerQ->whereNotNull('business_trips.end_time')
+                            ->where('business_trips.start_time', '<', $endTime)
                             ->where('business_trips.end_time', '>', $startTime);
                     })
-                    // И поездка активна (не отменена и не завершена)
-                    ->whereIn('business_trips.status', ['planned', 'in_progress']);
+                    ->orWhere(function ($innerQ) use ($startTime, $endTime) {
+                        // Если end_time null, проверяем что start_time в пределах интервала
+                        // или что start_time был недавно (для in_progress)
+                        $innerQ->whereNull('business_trips.end_time')
+                            ->where('business_trips.start_time', '<', $endTime)
+                            ->where('business_trips.start_time', '>=', $startTime->copy()->subHours(24));
+                            // И поездка началась не раньше чем 24 часа назад
+                    });
                 });
         });
     }
-
 }
