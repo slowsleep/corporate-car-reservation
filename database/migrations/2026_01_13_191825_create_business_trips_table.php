@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('car_id')->constrained();
             $table->dateTime('start_time')->nullable();
             $table->dateTime('end_time')->nullable();
-            $table->string('start_address')->nullable();
-            $table->string('end_address')->nullable();
+            $table->string('start_address');
+            $table->string('end_address');
             $table->enum('status', ['planned', 'in_progress', 'completed', 'cancelled']);
             $table->timestamps();
         });
